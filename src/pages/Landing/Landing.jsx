@@ -13,15 +13,19 @@ function Landing() {
     try {
       const response = await axios.get(`${apiUrl}/clothing-size/214`);
       console.log(response.data);
+      setDataSet(response.data);
+      const predictedSize = predictSize(dataset);
+      console.log(`Predicted size: ${predictedSize}`);
+      setUsersize(predictedSize)
     } catch (error) {
       console.error("Error fetching data: ", error);
     }
   }
 
-  fetchData();
-
   // Modal.setAppElement('#main');
   const [modalStates, setModalStates] = useState(true);
+  const [dataset, setDataSet] = useState([])
+  const [userSize, setUsersize] = useState("");
 
   const openModal = () => {
     setModalStates(true);
@@ -48,7 +52,36 @@ function Landing() {
     }
   };
 
+  function calculateDistance(product) {
+    return Math.sqrt(
+      Math.pow(sleeveCm - product.sleeve, 2) +
+      Math.pow(chestCm - product.chest, 2) +
+      Math.pow(waistCm - product.waist, 2) +
+      Math.pow(hipCm - product.hip, 2)
+    );
+  }
+
+  function predictSize(dataset) {
+    const distances = [];
+  
+    // Calculate distances between the user and each product in the dataset
+    for (const product of dataset) {
+      const distance = calculateDistance(product);
+      console.log(distance)
+      distances.push({ size: product.size, distance });
+    }
+  
+    // Sort distances in ascending order
+    distances.sort((a, b) => a.distance - b.distance);
+  
+    // Return the size with the smallest distance (nearest neighbor)
+    console.log(distances[0].size);
+    return distances[0].size;
+  }
+
   console.log(modalStates);
+  // const predictedSize = predictSize(dataset);
+  // console.log(`Predicted size: ${predictedSize}`);
 
   return (
     <>
@@ -123,12 +156,13 @@ function Landing() {
           </form>
         </div>
         <div className="modal__actions">
-          <button className="button primary">Fit Me</button>
+          <button className="button primary" onClick={fetchData}>Fit Me</button>
 
           <button className="button secondary" onClick={() => closeModal()}>
             Cancel
           </button>
         </div>
+        <p className="modal__size">Your size is {userSize}</p> 
       </Modal>
     </>
   );
